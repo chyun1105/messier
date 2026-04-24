@@ -597,7 +597,7 @@ export default function App() {
     // 확대된 상태일수록 같은 드래그에도 덜 움직이게 한다.
     // FOV 42°를 기준 감도로 두고, FOV가 작아지면 감도가 함께 줄어든다.
     const dragScale = THREE.MathUtils.clamp(fovRef.current / 42, 0.18, 1.8);
-    const dragSensitivity = 0.002 * dragScale;
+    const dragSensitivity = 0.003 * dragScale;
     yawPitchRef.current.yaw += dx * dragSensitivity;
     yawPitchRef.current.pitch += dy * dragSensitivity;
   }
@@ -701,14 +701,12 @@ export default function App() {
       <div className="container">
         <div className="header">
           <div className="titleBlock">
-            <div className="eyebrow">IOAA Messier Memorizer · 실제 별 카탈로그 기반 3D 천구</div>
-            <h1>메시에 천체 위치 퀴즈</h1>
-            <div className="subtitle">드래그로 하늘을 돌리고, 휠로 확대/축소한 뒤, M번호의 위치를 클릭해라.</div>
+            <div className="eyebrow">Messier Quiz</div>
+            <div className="subtitle">메시에 천체 위치 퀴즈 - GSA42 LCH</div>
           </div>
           <div className="buttons">
             <Button onClick={nextQuestion}>다음 문제</Button>
             <Button onClick={() => setRevealed((v) => !v)} variant="secondary">정답 보기</Button>
-            <Button onClick={recenterOnQuestion} variant="secondary">문제 방향으로 이동</Button>
             <Button onClick={resetQuizView} variant="secondary">성도 초기화</Button>
             <Button onClick={() => setShowSettings((v) => !v)} variant="secondary">표시 설정</Button>
           </div>
