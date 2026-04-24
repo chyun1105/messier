@@ -369,8 +369,8 @@ export default function App() {
 
       const starCloud = scene.getObjectByName("stars");
       if (starCloud?.material?.uniforms?.zoomScale) {
-        const rawScale = Math.pow(42 / fovRef.current, 0.7);
-        starCloud.material.uniforms.zoomScale.value = THREE.MathUtils.clamp(rawScale, 0.75, 4.0);
+        const rawScale = Math.pow(42 / fovRef.current, 0.8);
+        starCloud.material.uniforms.zoomScale.value = THREE.MathUtils.clamp(rawScale, 0.85, 2.4);
       }
 
       renderer.render(scene, camera);
@@ -610,7 +610,9 @@ export default function App() {
     e.preventDefault();
     const camera = cameraRef.current;
     if (!camera) return;
-    const next = THREE.MathUtils.clamp(fovRef.current + Math.sign(e.deltaY) * 6, 8, 125);
+    // 휠/트랙패드 줌을 부드럽게: 한 번 스크롤에 과하게 확대되지 않도록 지수형 변화 사용
+    const zoomFactor = Math.exp(e.deltaY * 0.0012);
+    const next = THREE.MathUtils.clamp(fovRef.current * zoomFactor, 10, 110);
     fovRef.current = next;
     camera.fov = next;
     camera.updateProjectionMatrix();
