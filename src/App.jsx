@@ -133,12 +133,10 @@ function spectralColor(spect) {
   return [0.9, 0.92, 1.0];
 }
 
-
 function starSizeFromMag(mag) {
   // 1등급 차이마다 약 2배 크기 차이. 6등급 별을 0.75px 기준으로 둔다.
   return THREE.MathUtils.clamp(0.75 * Math.pow(2, 6 - mag), 0.7, 36);
 }
-
 
 function starBrightnessFromMag(mag) {
   // 밝은 별의 밝기는 거의 유지하고, 어두운 별만 살짝 끌어올린다.
@@ -697,25 +695,140 @@ export default function App() {
         .toggle.on { background: #e2e8f0; color: #020617; }
         .toggleRow { display: flex; gap: 8px; flex-wrap: wrap; }
         @media (max-width: 980px) {
-          .header { align-items: flex-start; flex-direction: column; }
-          .titleBlock { background: rgba(2,6,23,.48); border: 1px solid rgba(148,163,184,.18); border-radius: 18px; padding: 12px; backdrop-filter: blur(12px); pointer-events: auto; }
-          .side { left: 12px; right: 12px; bottom: 12px; width: auto; max-height: 46vh; overflow: auto; }
-          .hud { display: none; }
+          .header {
+            left: 10px;
+            right: 10px;
+            top: 10px;
+            display: block;
+            pointer-events: none;
+          }
+
+          .titleBlock {
+            display: inline-block;
+            max-width: calc(100vw - 20px);
+            background: rgba(2,6,23,.42);
+            border: 1px solid rgba(148,163,184,.16);
+            border-radius: 16px;
+            padding: 9px 11px;
+            backdrop-filter: blur(12px);
+            pointer-events: auto;
+          }
+
+          .eyebrow {
+            font-size: 12px;
+            margin-bottom: 2px;
+          }
+
+          h1 {
+            display: none;
+          }
+
+          .subtitle {
+            font-size: 12px;
+            margin-top: 0;
+            color: rgba(226,232,240,.86);
+          }
+
+          .buttons {
+            position: fixed;
+            left: 10px;
+            right: 10px;
+            bottom: max(10px, env(safe-area-inset-bottom));
+            z-index: 14;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 7px;
+            pointer-events: auto;
+          }
+
+          .button {
+            min-height: 42px;
+            padding: 8px 6px;
+            border-radius: 13px;
+            font-size: 12px;
+            line-height: 1.1;
+            white-space: normal;
+            background: rgba(15,23,42,.74);
+          }
+
+          .buttons .button:nth-child(3) {
+            display: none;
+          }
+
+          .side {
+            left: 10px;
+            right: 10px;
+            bottom: calc(max(10px, env(safe-area-inset-bottom)) + 54px);
+            width: auto;
+            max-height: 42vh;
+            overflow: auto;
+            gap: 8px;
+            pointer-events: auto;
+          }
+
+          .card {
+            border-radius: 16px;
+            padding: 10px 11px;
+            background: rgba(15,23,42,.48);
+            backdrop-filter: blur(13px);
+          }
+
+          .cardTitle {
+            font-size: 15px;
+            margin-bottom: 5px;
+          }
+
+          .score {
+            font-size: 30px;
+            margin: 0;
+            line-height: 1;
+          }
+
+          .muted, .faint {
+            font-size: 12px;
+          }
+
+          .controls {
+            gap: 8px;
+          }
+
+          .toggleRow {
+            gap: 6px;
+          }
+
+          .toggle {
+            padding: 7px 9px;
+            font-size: 12px;
+          }
+
+          .hud {
+            left: 10px;
+            bottom: calc(max(10px, env(safe-area-inset-bottom)) + 104px);
+            max-width: calc(100vw - 20px);
+            padding: 8px 10px;
+            font-size: 12px;
+            background: rgba(2,6,23,.38);
+          }
+
+          .question {
+            font-size: 34px;
+          }
         }
       `}</style>
 
       <div className="container">
         <div className="header">
           <div className="titleBlock">
-            <div className="eyebrow">Messier Quiz</div>
-            <div className="subtitle">메시에 천체 위치 퀴즈</div>
+            <div className="eyebrow">IOAA Messier Memorizer · 실제 별 카탈로그 기반 3D 천구</div>
+            <h1>메시에 천체 위치 퀴즈</h1>
+            <div className="subtitle">드래그로 하늘을 돌리고, 휠로 확대/축소한 뒤, M번호의 위치를 클릭해라.</div>
           </div>
           <div className="buttons">
-            <Button onClick={nextQuestion}>다음 문제</Button>
-            <Button onClick={() => setRevealed((v) => !v)} variant="secondary">정답 보기</Button>
-            <Button onClick={recenterOnQuestion} variant="secondary">문제 방향으로 이동</Button>
-            <Button onClick={resetQuizView} variant="secondary">성도 초기화</Button>
-            <Button onClick={() => setShowSettings((v) => !v)} variant="secondary">표시 설정</Button>
+            <Button onClick={nextQuestion}>다음</Button>
+            <Button onClick={() => setRevealed((v) => !v)} variant="secondary">정답</Button>
+            <Button onClick={recenterOnQuestion} variant="secondary">문제 방향</Button>
+            <Button onClick={resetQuizView} variant="secondary">초기화</Button>
+            <Button onClick={() => setShowSettings((v) => !v)} variant="secondary">표시</Button>
           </div>
         </div>
 
