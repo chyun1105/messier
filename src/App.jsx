@@ -23,31 +23,6 @@ const NAMED_REFERENCE_STARS = new Set([
   "Altair", "Aldebaran", "Spica", "Antares", "Pollux", "Fomalhaut", "Deneb", "Regulus", "Polaris",
 ]);
 
-const CONSTELLATION_LINES = [
-  // Orion
-  [[5.9195, 7.4071], [5.5334, -0.2991], [5.6036, -1.2019], [5.6793, -1.9426], [5.2423, -8.2016]],
-  [[5.9195, 7.4071], [5.4189, 6.3497], [5.5334, -0.2991], [5.2423, -8.2016]],
-  [[5.5334, -0.2991], [5.7959, -9.6696]],
-
-  // Big Dipper / Ursa Major handle
-  [[11.0621, 61.7508], [11.0307, 56.3824], [11.8972, 53.6948], [12.2571, 57.0326], [12.9005, 55.9598], [13.3987, 54.9254], [13.7923, 49.3133]],
-
-  // Cassiopeia W
-  [[0.6751, 56.5373], [0.9451, 60.7167], [1.4303, 60.2353], [1.9066, 63.6701], [2.2945, 59.1498]],
-
-  // Cygnus cross
-  [[20.6905, 45.2803], [20.3705, 40.2567], [19.7496, 45.1308]],
-  [[20.3705, 40.2567], [20.7702, 33.9703]],
-
-  // Lyra
-  [[18.6156, 38.7837], [18.8347, 33.3627], [18.9824, 32.6896], [18.7462, 37.6051], [18.6156, 38.7837]],
-
-  // Scorpius rough line
-  [[16.4901, -26.4320], [16.5980, -28.2160], [16.8361, -34.2932], [17.5601, -37.1038], [17.7081, -39.0300]],
-
-  // Summer triangle
-  [[18.6156, 38.7837], [20.6905, 45.2803], [19.8464, 8.8683], [18.6156, 38.7837]],
-];
 
 function parseCSVLine(line) {
   const out = [];
@@ -225,7 +200,6 @@ export default function App() {
   const [limitingMag, setLimitingMag] = useState(6.0);
   const [showLabels, setShowLabels] = useState(true);
   const [showBrightStars, setShowBrightStars] = useState(true);
-  const [showConstellationLines, setShowConstellationLines] = useState(true);
   const [showMessierDots, setShowMessierDots] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedMessier, setSelectedMessier] = useState(null);
@@ -356,21 +330,6 @@ export default function App() {
       makeLine(pts, gridMaterial);
     }
     scene.add(celestialGrid);
-
-    const constellationGroup = new THREE.Group();
-    constellationGroup.name = "constellationLines";
-    const constellationMaterial = new THREE.LineBasicMaterial({
-      color: 0x7dd3fc,
-      transparent: true,
-      opacity: 0.5,
-      depthTest: false,
-    });
-    CONSTELLATION_LINES.forEach((linePoints) => {
-      const pts = linePoints.map(([ra, dec]) => raDecToVector(ra, dec, SKY_RADIUS * 0.992));
-      const geom = new THREE.BufferGeometry().setFromPoints(pts);
-      constellationGroup.add(new THREE.Line(geom, constellationMaterial));
-    });
-    scene.add(constellationGroup);
 
     const markerGeom = new THREE.SphereGeometry(3.4, 16, 16);
     const markerMat = new THREE.MeshBasicMaterial({ color: 0xff7a18, transparent: true, opacity: 0.95 });
@@ -542,10 +501,6 @@ export default function App() {
     scene.add(cloud);
   }, [stars, showBrightStars]);
 
-  useEffect(() => {
-    const group = sceneRef.current?.getObjectByName("constellationLines");
-    if (group) group.visible = showConstellationLines;
-  }, [showConstellationLines]);
 
   useEffect(() => {
     const layer = labelLayerRef.current;
@@ -814,7 +769,6 @@ export default function App() {
                 <div className="toggleRow">
                   <button className={`toggle ${showBrightStars ? "on" : ""}`} onClick={() => setShowBrightStars((v) => !v)}>밝은 별 표시</button>
                   <button className={`toggle ${showLabels ? "on" : ""}`} onClick={() => setShowLabels((v) => !v)}>밝은 별 이름</button>
-                  <button className={`toggle ${showConstellationLines ? "on" : ""}`} onClick={() => setShowConstellationLines((v) => !v)}>별자리 선</button>
                   <button className={`toggle ${showMessierDots ? "on" : ""}`} onClick={() => setShowMessierDots((v) => !v)}>메시에 점</button>
                 </div>
               </div>
