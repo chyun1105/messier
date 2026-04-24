@@ -133,16 +133,17 @@ function spectralColor(spect) {
   return [0.9, 0.92, 1.0];
 }
 
+
 function starSizeFromMag(mag) {
-  // 1등급 차이마다 점 크기가 약 1.3배 차이 나게 한다.
-  // 10등급 별을 기준으로 크기를 잡고, 밝은 별일수록 커진다.
-  return THREE.MathUtils.clamp(0.85 * Math.pow(2, 10 - mag), 0.65, 13);
+  // 1등급 차이마다 약 2배 크기 차이. 6등급 별을 0.75px 기준으로 둔다.
+  return THREE.MathUtils.clamp(0.75 * Math.pow(2, 6 - mag), 0.7, 36);
 }
 
+
 function starBrightnessFromMag(mag) {
-  // 밝은 별은 기존 느낌을 유지하고, 어두운 별만 살짝 밝게 보정한다.
+  // 밝은 별의 밝기는 거의 유지하고, 어두운 별만 살짝 끌어올린다.
   const brightPart = THREE.MathUtils.clamp(Math.pow(2.15, 6 - mag), 0.18, 12.0);
-  const faintBoost = THREE.MathUtils.smoothstep(mag, 4.0, 7.5) * 0.45;
+  const faintBoost = THREE.MathUtils.smoothstep(mag, 3.5, 6.5) * 0.42;
   return brightPart + faintBoost;
 }
 
