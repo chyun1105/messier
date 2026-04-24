@@ -369,7 +369,7 @@ export default function App() {
 
       const starCloud = scene.getObjectByName("stars");
       if (starCloud?.material?.uniforms?.zoomScale) {
-        const rawScale = Math.pow(42 / fovRef.current, 0.8);
+        const rawScale = Math.pow(42 / fovRef.current, 0.45);
         starCloud.material.uniforms.zoomScale.value = THREE.MathUtils.clamp(rawScale, 0.85, 2.4);
       }
 
@@ -594,8 +594,12 @@ export default function App() {
     p.x = e.clientX;
     p.y = e.clientY;
 
-    yawPitchRef.current.yaw += dx * 0.0032;
-    yawPitchRef.current.pitch += dy * 0.0032;
+    // 확대된 상태일수록 같은 드래그에도 덜 움직이게 한다.
+    // FOV 42°를 기준 감도로 두고, FOV가 작아지면 감도가 함께 줄어든다.
+    const dragScale = THREE.MathUtils.clamp(fovRef.current / 42, 0.18, 1.8);
+    const dragSensitivity = 0.0032 * dragScale;
+    yawPitchRef.current.yaw += dx * dragSensitivity;
+    yawPitchRef.current.pitch += dy * dragSensitivity;
   }
 
   function onPointerUp(e) {
@@ -611,7 +615,7 @@ export default function App() {
     const camera = cameraRef.current;
     if (!camera) return;
     // 휠/트랙패드 줌을 부드럽게: 한 번 스크롤에 과하게 확대되지 않도록 지수형 변화 사용
-    const zoomFactor = Math.exp(e.deltaY * 0.0012);
+    const zoomFactor = Math.exp(e.deltaY * 0.00155);
     const next = THREE.MathUtils.clamp(fovRef.current * zoomFactor, 10, 110);
     fovRef.current = next;
     camera.fov = next;
