@@ -366,6 +366,13 @@ export default function App() {
     function animate() {
       rafRef.current = requestAnimationFrame(animate);
       updateCameraLook();
+
+      const starCloud = scene.getObjectByName("stars");
+      if (starCloud?.material?.uniforms?.zoomScale) {
+        const rawScale = Math.pow(42 / fovRef.current, 0.7);
+        starCloud.material.uniforms.zoomScale.value = THREE.MathUtils.clamp(rawScale, 0.75, 4.0);
+      }
+
       renderer.render(scene, camera);
       updateLabels();
     }
@@ -454,9 +461,11 @@ export default function App() {
       blending: THREE.AdditiveBlending,
       uniforms: {
         pixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        zoomScale: { value: 1.0 },
       },
       vertexShader: `
         uniform float pixelRatio;
+        uniform float zoomScale;
         attribute vec3 customColor;
         attribute float size;
         varying vec3 vColor;
@@ -464,7 +473,7 @@ export default function App() {
           vColor = customColor;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           gl_Position = projectionMatrix * mvPosition;
-          gl_PointSize = size * pixelRatio;
+          gl_PointSize = size * pixelRatio * zoomScale;
         }
       `,
       fragmentShader: `
