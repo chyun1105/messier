@@ -136,7 +136,7 @@ function spectralColor(spect) {
 function starSizeFromMag(mag) {
   // 1등급 차이마다 점 크기가 약 1.3배 차이 나게 한다.
   // 10등급 별을 기준으로 크기를 잡고, 밝은 별일수록 커진다.
-  return THREE.MathUtils.clamp(0.85 * Math.pow(1.3, 10 - mag), 0.65, 13);
+  return THREE.MathUtils.clamp(0.85 * Math.pow(2, 10 - mag), 0.65, 13);
 }
 
 function starBrightnessFromMag(mag) {
