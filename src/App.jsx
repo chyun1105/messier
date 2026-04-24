@@ -597,7 +597,7 @@ export default function App() {
     // 확대된 상태일수록 같은 드래그에도 덜 움직이게 한다.
     // FOV 42°를 기준 감도로 두고, FOV가 작아지면 감도가 함께 줄어든다.
     const dragScale = THREE.MathUtils.clamp(fovRef.current / 42, 0.18, 1.8);
-    const dragSensitivity = 0.0032 * dragScale;
+    const dragSensitivity = 0.001 * dragScale;
     yawPitchRef.current.yaw += dx * dragSensitivity;
     yawPitchRef.current.pitch += dy * dragSensitivity;
   }
