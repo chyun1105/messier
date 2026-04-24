@@ -23,6 +23,32 @@ const NAMED_REFERENCE_STARS = new Set([
   "Altair", "Aldebaran", "Spica", "Antares", "Pollux", "Fomalhaut", "Deneb", "Regulus", "Polaris",
 ]);
 
+const CONSTELLATION_LINES = [
+  // Orion
+  [[5.9195, 7.4071], [5.5334, -0.2991], [5.6036, -1.2019], [5.6793, -1.9426], [5.2423, -8.2016]],
+  [[5.9195, 7.4071], [5.4189, 6.3497], [5.5334, -0.2991], [5.2423, -8.2016]],
+  [[5.5334, -0.2991], [5.7959, -9.6696]],
+
+  // Big Dipper / Ursa Major handle
+  [[11.0621, 61.7508], [11.0307, 56.3824], [11.8972, 53.6948], [12.2571, 57.0326], [12.9005, 55.9598], [13.3987, 54.9254], [13.7923, 49.3133]],
+
+  // Cassiopeia W
+  [[0.6751, 56.5373], [0.9451, 60.7167], [1.4303, 60.2353], [1.9066, 63.6701], [2.2945, 59.1498]],
+
+  // Cygnus cross
+  [[20.6905, 45.2803], [20.3705, 40.2567], [19.7496, 45.1308]],
+  [[20.3705, 40.2567], [20.7702, 33.9703]],
+
+  // Lyra
+  [[18.6156, 38.7837], [18.8347, 33.3627], [18.9824, 32.6896], [18.7462, 37.6051], [18.6156, 38.7837]],
+
+  // Scorpius rough line
+  [[16.4901, -26.4320], [16.5980, -28.2160], [16.8361, -34.2932], [17.5601, -37.1038], [17.7081, -39.0300]],
+
+  // Summer triangle
+  [[18.6156, 38.7837], [20.6905, 45.2803], [19.8464, 8.8683], [18.6156, 38.7837]],
+];
+
 function parseCSVLine(line) {
   const out = [];
   let cur = "";
@@ -138,8 +164,10 @@ function starSizeFromMag(mag) {
 }
 
 function starBrightnessFromMag(mag) {
-  // 밝은 별일수록 훨씬 강한 광량을 주어 기준별이 확실히 튀게 한다.
-  return THREE.MathUtils.clamp(Math.pow(2.15, 6 - mag), 0.18, 12.0);
+  // 밝은 별의 밝기는 거의 유지하고, 어두운 별만 살짝 끌어올린다.
+  const brightPart = THREE.MathUtils.clamp(Math.pow(2.15, 6 - mag), 0.18, 12.0);
+  const faintBoost = THREE.MathUtils.smoothstep(mag, 3.5, 6.5) * 0.42;
+  return brightPart + faintBoost;
 }
 
 function makeTextSprite(text) {
@@ -197,6 +225,7 @@ export default function App() {
   const [limitingMag, setLimitingMag] = useState(6.0);
   const [showLabels, setShowLabels] = useState(true);
   const [showBrightStars, setShowBrightStars] = useState(true);
+  const [showConstellationLines, setShowConstellationLines] = useState(true);
   const [showMessierDots, setShowMessierDots] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedMessier, setSelectedMessier] = useState(null);
@@ -327,6 +356,21 @@ export default function App() {
       makeLine(pts, gridMaterial);
     }
     scene.add(celestialGrid);
+
+    const constellationGroup = new THREE.Group();
+    constellationGroup.name = "constellationLines";
+    const constellationMaterial = new THREE.LineBasicMaterial({
+      color: 0x7dd3fc,
+      transparent: true,
+      opacity: 0.5,
+      depthTest: false,
+    });
+    CONSTELLATION_LINES.forEach((linePoints) => {
+      const pts = linePoints.map(([ra, dec]) => raDecToVector(ra, dec, SKY_RADIUS * 0.992));
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      constellationGroup.add(new THREE.Line(geom, constellationMaterial));
+    });
+    scene.add(constellationGroup);
 
     const markerGeom = new THREE.SphereGeometry(3.4, 16, 16);
     const markerMat = new THREE.MeshBasicMaterial({ color: 0xff7a18, transparent: true, opacity: 0.95 });
@@ -499,6 +543,11 @@ export default function App() {
   }, [stars, showBrightStars]);
 
   useEffect(() => {
+    const group = sceneRef.current?.getObjectByName("constellationLines");
+    if (group) group.visible = showConstellationLines;
+  }, [showConstellationLines]);
+
+  useEffect(() => {
     const layer = labelLayerRef.current;
     if (!layer) return;
     layer.innerHTML = "";
@@ -597,7 +646,7 @@ export default function App() {
     // 확대된 상태일수록 같은 드래그에도 덜 움직이게 한다.
     // FOV 42°를 기준 감도로 두고, FOV가 작아지면 감도가 함께 줄어든다.
     const dragScale = THREE.MathUtils.clamp(fovRef.current / 42, 0.18, 1.8);
-    const dragSensitivity = 0.003 * dragScale;
+    const dragSensitivity = 0.0032 * dragScale;
     yawPitchRef.current.yaw += dx * dragSensitivity;
     yawPitchRef.current.pitch += dy * dragSensitivity;
   }
@@ -701,12 +750,14 @@ export default function App() {
       <div className="container">
         <div className="header">
           <div className="titleBlock">
-            <div className="eyebrow">Messier Quiz</div>
-            <div className="subtitle">메시에 천체 위치 퀴즈 - GSA42 LCH</div>
+            <div className="eyebrow">IOAA Messier Memorizer · 실제 별 카탈로그 기반 3D 천구</div>
+            <h1>메시에 천체 위치 퀴즈</h1>
+            <div className="subtitle">드래그로 하늘을 돌리고, 휠로 확대/축소한 뒤, M번호의 위치를 클릭해라.</div>
           </div>
           <div className="buttons">
             <Button onClick={nextQuestion}>다음 문제</Button>
             <Button onClick={() => setRevealed((v) => !v)} variant="secondary">정답 보기</Button>
+            <Button onClick={recenterOnQuestion} variant="secondary">문제 방향으로 이동</Button>
             <Button onClick={resetQuizView} variant="secondary">성도 초기화</Button>
             <Button onClick={() => setShowSettings((v) => !v)} variant="secondary">표시 설정</Button>
           </div>
@@ -763,6 +814,7 @@ export default function App() {
                 <div className="toggleRow">
                   <button className={`toggle ${showBrightStars ? "on" : ""}`} onClick={() => setShowBrightStars((v) => !v)}>밝은 별 표시</button>
                   <button className={`toggle ${showLabels ? "on" : ""}`} onClick={() => setShowLabels((v) => !v)}>밝은 별 이름</button>
+                  <button className={`toggle ${showConstellationLines ? "on" : ""}`} onClick={() => setShowConstellationLines((v) => !v)}>별자리 선</button>
                   <button className={`toggle ${showMessierDots ? "on" : ""}`} onClick={() => setShowMessierDots((v) => !v)}>메시에 점</button>
                 </div>
               </div>
