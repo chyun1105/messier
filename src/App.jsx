@@ -147,24 +147,26 @@ function starBrightnessFromMag(mag) {
 
 function makeTextSprite(text) {
   const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 128;
+  canvas.width = 768;
+  canvas.height = 160;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = "bold 54px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+
+  const safeText = String(text || "").slice(0, 42);
+  ctx.font = "bold 46px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineWidth = 10;
-  ctx.strokeStyle = "rgba(2,6,23,0.95)";
+  ctx.strokeStyle = "rgba(2,6,23,0.96)";
   ctx.fillStyle = "rgba(255,255,255,0.98)";
-  ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  ctx.strokeText(safeText, canvas.width / 2, canvas.height / 2);
+  ctx.fillText(safeText, canvas.width / 2, canvas.height / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(70, 35, 1);
+  sprite.scale.set(190, 40, 1);
   return sprite;
 }
 
@@ -555,7 +557,7 @@ export default function App() {
 
     if (!selectedMessier || !showMessierDots) return;
 
-    const sprite = makeTextSprite(`M${selectedMessier.id}`);
+    const sprite = makeTextSprite(selectedMessier.name || `M${selectedMessier.id}`);
     sprite.position.copy(raDecToVector(selectedMessier.ra, selectedMessier.dec, SKY_RADIUS * 0.94));
     selectedMessierLabelRef.current = sprite;
     scene.add(sprite);
