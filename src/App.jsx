@@ -185,7 +185,7 @@ export default function App() {
   const selectedMessierLabelRef = useRef(null);
   const starLabelsRef = useRef([]);
   const rafRef = useRef(null);
-  const pointerRef = useRef({ down: false, moved: false, x: 0, y: 0 });
+  const pointerRef = useRef({ down: false, moved: false, x: 0, y: 0, startX: 0, startY: 0 });
   const yawPitchRef = useRef({ yaw: 0.0, pitch: 0.0 });
   const fovRef = useRef(42);
   const showLabelsRef = useRef(true);
@@ -594,7 +594,14 @@ export default function App() {
   }, [guess, question, revealed]);
 
   function onPointerDown(e) {
-    pointerRef.current = { down: true, moved: false, x: e.clientX, y: e.clientY };
+    pointerRef.current = {
+      down: true,
+      moved: false,
+      x: e.clientX,
+      y: e.clientY,
+      startX: e.clientX,
+      startY: e.clientY,
+    };
   }
 
   function onPointerMove(e) {
@@ -602,7 +609,8 @@ export default function App() {
     if (!p.down) return;
     const dx = e.clientX - p.x;
     const dy = e.clientY - p.y;
-    if (Math.abs(dx) + Math.abs(dy) > 2) p.moved = true;
+    const totalMove = Math.hypot(e.clientX - p.startX, e.clientY - p.startY);
+    if (totalMove > 8) p.moved = true;
     p.x = e.clientX;
     p.y = e.clientY;
 
@@ -618,7 +626,10 @@ export default function App() {
     const p = pointerRef.current;
     if (!p.down) return;
     pointerRef.current.down = false;
-    if (p.moved) return;
+
+    const totalMove = Math.hypot(e.clientX - p.startX, e.clientY - p.startY);
+    if (p.moved || totalMove > 8) return;
+
     submitGuess(e);
   }
 
@@ -646,7 +657,7 @@ export default function App() {
     const raycaster = raycasterRef.current;
     raycaster.setFromCamera(mouse, cameraRef.current);
 
-    const direction = raycaster.ray.dir
+    const direction = raycaster.ray.direction.clone().normalize();
     const g = vectorToRaDec(direction);
     setGuess(g);
 
@@ -833,6 +844,10 @@ export default function App() {
           <div className="card">
             <div
               className="skyWrap"
+              onClick={(e) => {
+                // 일부 모바일 브라우저에서 pointerup이 드래그로 오판되는 경우를 대비한 보조 클릭 처리
+                if (!pointerRef.current.moved) submitGuess(e);
+              }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
