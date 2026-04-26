@@ -147,26 +147,24 @@ function starBrightnessFromMag(mag) {
 
 function makeTextSprite(text) {
   const canvas = document.createElement("canvas");
-  canvas.width = 768;
-  canvas.height = 160;
+  canvas.width = 256;
+  canvas.height = 128;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const safeText = String(text || "").slice(0, 42);
-  ctx.font = "bold 46px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+  ctx.font = "bold 54px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineWidth = 10;
-  ctx.strokeStyle = "rgba(2,6,23,0.96)";
+  ctx.strokeStyle = "rgba(2,6,23,0.95)";
   ctx.fillStyle = "rgba(255,255,255,0.98)";
-  ctx.strokeText(safeText, canvas.width / 2, canvas.height / 2);
-  ctx.fillText(safeText, canvas.width / 2, canvas.height / 2);
+  ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(190, 40, 1);
+  sprite.scale.set(42, 21, 1);
   return sprite;
 }
 
@@ -536,9 +534,17 @@ export default function App() {
     const mat = new THREE.MeshBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.86, depthTest: false });
     messier.forEach((m) => {
       const dot = new THREE.Mesh(geom, mat);
-      dot.position.copy(raDecToVector(m.ra, m.dec, SKY_RADIUS * 0.985));
+      const pos = raDecToVector(m.ra, m.dec, SKY_RADIUS * 0.985);
+      dot.position.copy(pos);
       dot.userData = { type: "messier", messier: m };
       group.add(dot);
+
+      const label = makeTextSprite(`M${m.id}`);
+      label.position.copy(pos.clone().multiplyScalar(0.995));
+      label.position.x += 18;
+      label.position.y += 10;
+      label.userData = { type: "messierLabel", messier: m };
+      group.add(label);
     });
     scene.add(group);
   }, [messier, showMessierDots]);
@@ -557,7 +563,7 @@ export default function App() {
 
     if (!selectedMessier || !showMessierDots) return;
 
-    const sprite = makeTextSprite(selectedMessier.name || `M${selectedMessier.id}`);
+    const sprite = makeTextSprite(`M${selectedMessier.id}`);
     sprite.position.copy(raDecToVector(selectedMessier.ra, selectedMessier.dec, SKY_RADIUS * 0.94));
     selectedMessierLabelRef.current = sprite;
     scene.add(sprite);
@@ -640,18 +646,7 @@ export default function App() {
     const raycaster = raycasterRef.current;
     raycaster.setFromCamera(mouse, cameraRef.current);
 
-    if (showMessierDots) {
-      const group = sceneRef.current?.getObjectByName("messierDots");
-      if (group) {
-        const hits = raycaster.intersectObjects(group.children, false);
-        if (hits.length > 0) {
-          setSelectedMessier(hits[0].object.userData.messier);
-          return;
-        }
-      }
-    }
-
-    const direction = raycaster.ray.direction.clone().normalize();
+    const direction = raycaster.ray.dir
     const g = vectorToRaDec(direction);
     setGuess(g);
 
